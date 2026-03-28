@@ -3,7 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const { loadData, saveData } = require('./helpers');
 
-const config = JSON.parse(fs.readFileSync('./config.json'));
+const config = process.env.CONFIG 
+    ? JSON.parse(process.env.CONFIG) 
+    : JSON.parse(fs.readFileSync('./config.json'));
 
 const client = new Client({
     intents: [
