@@ -3,9 +3,15 @@ const fs = require('fs');
 const path = require('path');
 const { loadData, saveData } = require('./helpers');
 
-const config = process.env.CONFIG 
-    ? JSON.parse(process.env.CONFIG) 
-    : JSON.parse(fs.readFileSync('./config.json'));
+// ✅ CONFIG ARREGLADO
+const config = {
+    token: process.env.TOKEN,
+    roles: {
+        agentesLibres: process.env.AGENTES_LIBRES
+    },
+    canalAvisos: process.env.CANAL_AVISOS,
+    canalResultados: process.env.CANAL_RESULTADOS
+};
 
 const client = new Client({
     intents: [
@@ -36,13 +42,11 @@ client.once('ready', () => {
 });
 
 client.on('interactionCreate', async interaction => {
-    // Manejo de botones
     if (interaction.isButton()) {
         const parts = interaction.customId.split('_');
         const accion = parts[0];
         const tipo = parts[1];
 
-        // ── BAJA (demand) ──────────────────────────────────────────
         if (accion === 'baja') {
             if (tipo === 'cancelar') {
                 return interaction.update({ content: '✅ Baja cancelada.', embeds: [], components: [] });
@@ -79,7 +83,6 @@ client.on('interactionCreate', async interaction => {
 
                 await interaction.update({ content: `✅ Te diste de baja de <@&${equipoRolId}> correctamente.`, embeds: [], components: [] });
 
-                // Embed estilo imagen al canal de bajas
                 const canalAvisos = config.canalAvisos
                     ? interaction.guild.channels.cache.get(config.canalAvisos)
                     : null;
@@ -103,7 +106,6 @@ client.on('interactionCreate', async interaction => {
             }
         }
 
-        // ── RESET TEMPORADA ────────────────────────────────────────
         if (accion === 'reset') {
             if (parts[1] === 'cancelar') {
                 return interaction.update({ content: '✅ Reset cancelado.', embeds: [], components: [] });
@@ -119,14 +121,12 @@ client.on('interactionCreate', async interaction => {
 
                 const data = loadData();
 
-                // Resetear stats de todos los equipos
                 for (const rolId in data.equipos) {
                     data.equipos[rolId].puntos = 0;
                     data.equipos[rolId].victorias = 0;
                     data.equipos[rolId].derrotas = 0;
                 }
 
-                // Limpiar historial y fixture
                 data.historial = [];
                 data.fixture = [];
                 data.temporada = nuevaTemporada;
@@ -140,7 +140,6 @@ client.on('interactionCreate', async interaction => {
 
                 await interaction.update({ embeds: [embed], components: [] });
 
-                // Anunciar en canal de resultados
                 const canalResultados = config.canalResultados
                     ? interaction.guild.channels.cache.get(config.canalResultados)
                     : null;
@@ -148,14 +147,12 @@ client.on('interactionCreate', async interaction => {
             }
         }
 
-        // ── FICHAJE ────────────────────────────────────────────────
         if (accion === 'fichar') {
             const jugadorId = parts[2];
             const equipoRolId = parts[3];
 
-            // Solo el jugador al que se le propone puede responder
             if (interaction.user.id !== jugadorId) {
-                return interaction.reply({ content: '❌ Solo el jugador al que van a fichar puede responder esta propuesta.', ephemeral: true });
+                return interaction.reply({ content: '❌ Solo el jugador puede responder.', ephemeral: true });
             }
 
             const data = loadData();
@@ -164,30 +161,18 @@ client.on('interactionCreate', async interaction => {
             const iconoEquipo = data.equipos[equipoRolId]?.imagen || null;
 
             if (tipo === 'rechazar') {
-                const embedRechazado = new EmbedBuilder()
+                const embed = new EmbedBuilder()
                     .setTitle('❌ Fichaje Rechazado')
-                    .setDescription(`**${nombreEquipo}** envió una propuesta de fichaje a <@${jugadorId}>`)
-                    .addFields(
-                        { name: 'Jugador', value: `<@${jugadorId}>`, inline: false },
-                        { name: 'Equipo', value: nombreEquipo, inline: false },
-                        { name: 'Estado', value: '❌ Rechazado por el jugador', inline: false }
-                    )
-                    .setColor(0xFF0000)
-                    .setTimestamp();
+                    .setDescription(`**${nombreEquipo}** intentó fichar a <@${jugadorId}>`)
+                    .setColor(0xFF0000);
 
-                if (iconoEquipo) embedRechazado.setThumbnail(iconoEquipo);
-
-                return interaction.update({ embeds: [embedRechazado], components: [] });
+                if (iconoEquipo) embed.setThumbnail(iconoEquipo);
+                return interaction.update({ embeds: [embed], components: [] });
             }
 
             if (tipo === 'aceptar') {
                 const equipo = data.equipos[equipoRolId];
-                if (!equipo) {
-                    return interaction.update({ content: '❌ El equipo ya no existe.', embeds: [], components: [] });
-                }
-                if (equipo.jugadores?.length >= 12) {
-                    return interaction.update({ content: `❌ **${nombreEquipo}** ya tiene 12 jugadores.`, embeds: [], components: [] });
-                }
+                if (!equipo) return interaction.update({ content: '❌ Equipo no existe.', embeds: [], components: [] });
 
                 if (!equipo.jugadores) equipo.jugadores = [];
                 equipo.jugadores.push(jugadorId);
@@ -199,20 +184,7 @@ client.on('interactionCreate', async interaction => {
                     await member.roles.remove(config.roles.agentesLibres).catch(() => {});
                 }
 
-                const embedAceptado = new EmbedBuilder()
-                    .setTitle('📥 Fichaje Confirmado')
-                    .setDescription(`**${nombreEquipo}** ha fichado a <@${jugadorId}>`)
-                    .addFields(
-                        { name: 'Jugador', value: `<@${jugadorId}>`, inline: false },
-                        { name: 'Equipo', value: nombreEquipo, inline: false },
-                        { name: 'Estado', value: `✅ Aceptado — Nuevo jugador de ${nombreEquipo}`, inline: false }
-                    )
-                    .setColor(0x00C851)
-                    .setTimestamp();
-
-                if (iconoEquipo) embedAceptado.setThumbnail(iconoEquipo);
-
-                return interaction.update({ embeds: [embedAceptado], components: [] });
+                return interaction.update({ content: `✅ Fichaje confirmado en ${nombreEquipo}`, components: [] });
             }
         }
 
@@ -227,14 +199,10 @@ client.on('interactionCreate', async interaction => {
     try {
         await command.execute(interaction, client);
     } catch (error) {
-        console.error(`Error ejecutando ${interaction.commandName}:`, error);
-        const msg = { content: '❌ Ocurrió un error al ejecutar el comando.', ephemeral: true };
-        if (interaction.replied || interaction.deferred) {
-            await interaction.followUp(msg);
-        } else {
-            await interaction.reply(msg);
-        }
+        console.error(error);
+        await interaction.reply({ content: '❌ Error al ejecutar.', ephemeral: true });
     }
 });
 
+// ✅ LOGIN CORREGIDO
 client.login(config.token);
