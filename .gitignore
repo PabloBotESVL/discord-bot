@@ -2,7 +2,6 @@
 config.json
 
 # Base de datos de la liga
-data.json
 
 # Dependencias de Node
 node_modules/
