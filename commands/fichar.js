@@ -15,14 +15,16 @@ module.exports = {
         ),
 
     async execute(interaction, client) {
-        const esDT = interaction.member.roles.cache.has(client.config.roles.dt);
+        const data = loadData();
+        const dtRolId = data.config?.dt || client.config?.roles?.dt;
+        const esDT = dtRolId ? interaction.member.roles.cache.has(dtRolId) : false;
+
         if (!esStaff(interaction.member, client.config) && !esDT) {
             return interaction.reply({ content: '❌ Solo el staff o los DTs pueden fichar jugadores.', ephemeral: true });
         }
 
         const jugador = interaction.options.getUser('jugador');
         const rol = interaction.options.getRole('equipo');
-        const data = loadData();
 
         if (!data.equipos[rol.id]) {
             return interaction.reply({ content: `❌ El equipo <@&${rol.id}> no está registrado.`, ephemeral: true });

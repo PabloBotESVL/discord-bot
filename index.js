@@ -3,15 +3,9 @@ const fs = require('fs');
 const path = require('path');
 const { loadData, saveData } = require('./helpers');
 
-// ✅ CONFIG ARREGLADO
-const config = {
-    token: process.env.TOKEN,
-    roles: {
-        agentesLibres: process.env.AGENTES_LIBRES
-    },
-    canalAvisos: process.env.CANAL_AVISOS,
-    canalResultados: process.env.CANAL_RESULTADOS
-};
+const config = process.env.CONFIG
+    ? JSON.parse(process.env.CONFIG)
+    : JSON.parse(fs.readFileSync('./config.json'));
 
 const client = new Client({
     intents: [
@@ -42,11 +36,13 @@ client.once('ready', () => {
 });
 
 client.on('interactionCreate', async interaction => {
+    // Manejo de botones
     if (interaction.isButton()) {
         const parts = interaction.customId.split('_');
         const accion = parts[0];
         const tipo = parts[1];
 
+        // ── BAJA (demand) ──────────────────────────────────────────
         if (accion === 'baja') {
             if (tipo === 'cancelar') {
                 return interaction.update({ content: '✅ Baja cancelada.', embeds: [], components: [] });
@@ -71,14 +67,13 @@ client.on('interactionCreate', async interaction => {
                 saveData(data);
 
                 const member = await interaction.guild.members.fetch(userId).catch(() => null);
-                const rol = interaction.guild.roles.cache.get(equipoRolId);
-                const nombreEquipo = rol ? rol.name : 'el equipo';
                 const iconoEquipo = equipo.imagen || null;
+                const agentesLibresRolId = data.config?.agentesLibres || config?.roles?.agentesLibres;
 
                 if (member) {
                     await member.roles.remove(equipoRolId).catch(() => {});
                     const enOtroEquipo = Object.values(data.equipos).some(eq => eq.jugadores?.includes(userId));
-                    if (!enOtroEquipo) await member.roles.add(config.roles.agentesLibres).catch(() => {});
+                    if (!enOtroEquipo && agentesLibresRolId) await member.roles.add(agentesLibresRolId).catch(() => {});
                 }
 
                 await interaction.update({ content: `✅ Te diste de baja de <@&${equipoRolId}> correctamente.`, embeds: [], components: [] });
@@ -98,14 +93,13 @@ client.on('interactionCreate', async interaction => {
                         )
                         .setColor(0xFF6B00)
                         .setTimestamp();
-
                     if (iconoEquipo) embed.setThumbnail(iconoEquipo);
-
                     await canalAvisos.send({ embeds: [embed] });
                 }
             }
         }
 
+        // ── RESET TEMPORADA ────────────────────────────────────────
         if (accion === 'reset') {
             if (parts[1] === 'cancelar') {
                 return interaction.update({ content: '✅ Reset cancelado.', embeds: [], components: [] });
@@ -147,32 +141,42 @@ client.on('interactionCreate', async interaction => {
             }
         }
 
+        // ── FICHAJE ────────────────────────────────────────────────
         if (accion === 'fichar') {
             const jugadorId = parts[2];
             const equipoRolId = parts[3];
 
             if (interaction.user.id !== jugadorId) {
-                return interaction.reply({ content: '❌ Solo el jugador puede responder.', ephemeral: true });
+                return interaction.reply({ content: '❌ Solo el jugador al que van a fichar puede responder esta propuesta.', ephemeral: true });
             }
 
             const data = loadData();
-            const rol = interaction.guild.roles.cache.get(equipoRolId);
-            const nombreEquipo = rol ? rol.name : 'el equipo';
             const iconoEquipo = data.equipos[equipoRolId]?.imagen || null;
+            const agentesLibresRolId = data.config?.agentesLibres || config?.roles?.agentesLibres;
 
             if (tipo === 'rechazar') {
-                const embed = new EmbedBuilder()
+                const embedRechazado = new EmbedBuilder()
                     .setTitle('❌ Fichaje Rechazado')
-                    .setDescription(`**${nombreEquipo}** intentó fichar a <@${jugadorId}>`)
-                    .setColor(0xFF0000);
-
-                if (iconoEquipo) embed.setThumbnail(iconoEquipo);
-                return interaction.update({ embeds: [embed], components: [] });
+                    .setDescription(`<@&${equipoRolId}> envió una propuesta de fichaje a <@${jugadorId}>`)
+                    .addFields(
+                        { name: 'Jugador', value: `<@${jugadorId}>`, inline: false },
+                        { name: 'Equipo', value: `<@&${equipoRolId}>`, inline: false },
+                        { name: 'Estado', value: '❌ Rechazado por el jugador', inline: false }
+                    )
+                    .setColor(0xFF0000)
+                    .setTimestamp();
+                if (iconoEquipo) embedRechazado.setThumbnail(iconoEquipo);
+                return interaction.update({ embeds: [embedRechazado], components: [] });
             }
 
             if (tipo === 'aceptar') {
                 const equipo = data.equipos[equipoRolId];
-                if (!equipo) return interaction.update({ content: '❌ Equipo no existe.', embeds: [], components: [] });
+                if (!equipo) {
+                    return interaction.update({ content: '❌ El equipo ya no existe.', embeds: [], components: [] });
+                }
+                if (equipo.jugadores?.length >= 12) {
+                    return interaction.update({ content: `❌ <@&${equipoRolId}> ya tiene 12 jugadores.`, embeds: [], components: [] });
+                }
 
                 if (!equipo.jugadores) equipo.jugadores = [];
                 equipo.jugadores.push(jugadorId);
@@ -181,10 +185,21 @@ client.on('interactionCreate', async interaction => {
                 const member = await interaction.guild.members.fetch(jugadorId).catch(() => null);
                 if (member) {
                     await member.roles.add(equipoRolId).catch(() => {});
-                    await member.roles.remove(config.roles.agentesLibres).catch(() => {});
+                    if (agentesLibresRolId) await member.roles.remove(agentesLibresRolId).catch(() => {});
                 }
 
-                return interaction.update({ content: `✅ Fichaje confirmado en ${nombreEquipo}`, components: [] });
+                const embedAceptado = new EmbedBuilder()
+                    .setTitle('📥 Fichaje Confirmado')
+                    .setDescription(`<@&${equipoRolId}> ha fichado a <@${jugadorId}>`)
+                    .addFields(
+                        { name: 'Jugador', value: `<@${jugadorId}>`, inline: false },
+                        { name: 'Equipo', value: `<@&${equipoRolId}>`, inline: false },
+                        { name: 'Estado', value: `✅ Aceptado — Nuevo jugador de <@&${equipoRolId}>`, inline: false }
+                    )
+                    .setColor(0x00C851)
+                    .setTimestamp();
+                if (iconoEquipo) embedAceptado.setThumbnail(iconoEquipo);
+                return interaction.update({ embeds: [embedAceptado], components: [] });
             }
         }
 
@@ -199,10 +214,14 @@ client.on('interactionCreate', async interaction => {
     try {
         await command.execute(interaction, client);
     } catch (error) {
-        console.error(error);
-        await interaction.reply({ content: '❌ Error al ejecutar.', ephemeral: true });
+        console.error(`Error ejecutando ${interaction.commandName}:`, error);
+        const msg = { content: '❌ Ocurrió un error al ejecutar el comando.', ephemeral: true };
+        if (interaction.replied || interaction.deferred) {
+            await interaction.followUp(msg);
+        } else {
+            await interaction.reply(msg);
+        }
     }
 });
 
-// ✅ LOGIN CORREGIDO
 client.login(config.token);
