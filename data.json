@@ -3,18 +3,16 @@
     "1457558508730978406",
     "1457540612784918632",
     "1457557175630168144",
-    "1460788899767910450",
-    "1480261420326064410",
-    "1480993330564432136"
+    "1457558329130876928",
+    "1457860454843154432"
   ],
   "division2": [
-    "1457558329130876928",
-    "1457860454843154432",
-    "1474169214272016477",
-    "1482566076805156864",
+    "1457556533637419172",
     "1457558079276187669",
-    "1480278039538434221",
-    "1457556533637419172"
+    "1487346849231671337",
+    "1480261420326064410",
+    "1460788899767910450",
+    "1474169214272016477"
   ],
   "equipos": {
     "1457558508730978406": {
@@ -35,41 +33,39 @@
       "puntos": 0,
       "victorias": 0,
       "derrotas": 0,
-      "jugadores": [
-        "1470569044766884008"
-      ],
+      "jugadores": [],
       "dt": null,
       "subdt": null,
       "imagen": "https://cdn.discordapp.com/emojis/1478522844442001428.png?size=128"
-    },
-    "1480278039538434221": {
-      "puntos": 0,
-      "victorias": 0,
-      "derrotas": 0,
-      "jugadores": [],
-      "dt": null,
-      "subdt": "1277721850394447913",
-      "imagen": "https://cdn.discordapp.com/emojis/1484040643465580724.png?size=128"
-    },
-    "1457556533637419172": {
-      "puntos": 0,
-      "victorias": 0,
-      "derrotas": 0,
-      "jugadores": [],
-      "dt": "1193761485743202358",
-      "subdt": "1463755916879990936",
-      "imagen": "https://cdn.discordapp.com/emojis/1478884771382952138.png?size=128"
     },
     "1457557175630168144": {
       "puntos": 0,
       "victorias": 0,
       "derrotas": 0,
       "jugadores": [],
-      "dt": "1378774053095211008",
-      "subdt": "819021179817426974",
+      "dt": null,
+      "subdt": null,
+      "imagen": "https://cdn.discordapp.com/emojis/1484040643465580724.png?size=128"
+    },
+    "1457558329130876928": {
+      "puntos": 0,
+      "victorias": 0,
+      "derrotas": 0,
+      "jugadores": [],
+      "dt": null,
+      "subdt": null,
+      "imagen": "https://cdn.discordapp.com/emojis/1478884771382952138.png?size=128"
+    },
+    "1457860454843154432": {
+      "puntos": 0,
+      "victorias": 0,
+      "derrotas": 0,
+      "jugadores": [],
+      "dt": null,
+      "subdt": null,
       "imagen": "https://cdn.discordapp.com/emojis/1478077121417973930.png?size=128"
     },
-    "1480261420326064410": {
+    "1457556533637419172": {
       "puntos": 0,
       "victorias": 0,
       "derrotas": 0,
@@ -78,25 +74,25 @@
       "subdt": null,
       "imagen": "https://cdn.discordapp.com/emojis/1483278316013224027.png?size=128"
     },
-    "1460788899767910450": {
+    "1457558079276187669": {
       "puntos": 0,
       "victorias": 0,
       "derrotas": 0,
       "jugadores": [],
-      "dt": "817939588551016459",
-      "subdt": "1256327463903170650",
+      "dt": null,
+      "subdt": null,
       "imagen": "https://cdn.discordapp.com/emojis/1478124478189015260.png?size=128"
     },
-    "1457558329130876928": {
+    "1487346849231671337": {
       "puntos": 0,
       "victorias": 0,
       "derrotas": 0,
       "jugadores": [],
-      "dt": "1398075194148393051",
-      "subdt": "1431662797724324013",
+      "dt": null,
+      "subdt": null,
       "imagen": "https://cdn.discordapp.com/emojis/1478166483174424637.png?size=128"
     },
-    "1457558079276187669": {
+    "1480261420326064410": {
       "puntos": 0,
       "victorias": 0,
       "derrotas": 0,
@@ -105,7 +101,7 @@
       "subdt": null,
       "imagen": "https://cdn.discordapp.com/emojis/1484039754860335236.png?size=128"
     },
-    "1457860454843154432": {
+    "1460788899767910450": {
       "puntos": 0,
       "victorias": 0,
       "derrotas": 0,
@@ -122,32 +118,39 @@
       "dt": null,
       "subdt": null,
       "imagen": "https://cdn.discordapp.com/emojis/1484039663948922960.png?size=128"
-    },
-    "1480993330564432136": {
-      "puntos": 0,
-      "victorias": 0,
-      "derrotas": 0,
-      "jugadores": [],
-      "dt": null,
-      "subdt": null,
-      "imagen": "https://cdn.discordapp.com/emojis/1484039363166994522.png?size=128"
-    },
-    "1482566076805156864": {
-      "puntos": 0,
-      "victorias": 0,
-      "derrotas": 0,
-      "jugadores": [],
-      "dt": null,
-      "subdt": null,
-      "imagen": "https://cdn.discordapp.com/emojis/1486204004542189609.png?size=128"
     }
+    
   },
   "advertencias": {
     "1010923970385690665": [],
     "1378774053095211008": []
   },
-  "bans": [],
-  "fixture": [],
+  "bans": [
+    {
+      "id": "1470569044766884008",
+      "username": "dark019848",
+      "motivo": "aura",
+      "fecha": "2026-05-08T02:55:23.714Z"
+    }
+  ],
+  "fixture": [
+    {
+      "id": 1,
+      "equipo1Id": "1457557175630168144",
+      "equipo2Id": "1457558508730978406",
+      "timestamp": 1778208540,
+      "division": 1,
+      "avisado": true
+    },
+    {
+      "id": 2,
+      "equipo1Id": "1457557175630168144",
+      "equipo2Id": "1457558508730978406",
+      "timestamp": 1778208660,
+      "division": 1,
+      "avisado": true
+    }
+  ],
   "historial": [],
   "temporada": "temporada 1",
   "warnsEquipos": {
