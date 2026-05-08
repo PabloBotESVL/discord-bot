@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const { loadData, saveData, esStaff } = require('../helpers');
 
 module.exports = {
@@ -16,7 +16,10 @@ module.exports = {
         ),
 
     async execute(interaction, client) {
-        const esDT = interaction.member.roles.cache.has(client.config.roles.dt);
+        const data = loadData();
+        const dtRolId = data.config?.dt || client.config?.roles?.dt;
+        const esDT = dtRolId ? interaction.member.roles.cache.has(dtRolId) : false;
+
         if (!esStaff(interaction.member, client.config) && !esDT) {
             return interaction.reply({ content: '❌ Solo el staff o los DTs pueden bajar jugadores.', ephemeral: true });
         }
@@ -24,7 +27,6 @@ module.exports = {
         const jugador = interaction.options.getUser('jugador');
         const rol = interaction.options.getRole('equipo');
         const motivo = interaction.options.getString('motivo');
-        const data = loadData();
 
         if (!data.equipos[rol.id]) {
             return interaction.reply({ content: `❌ El equipo <@&${rol.id}> no está registrado.`, ephemeral: true });
@@ -39,22 +41,21 @@ module.exports = {
         equipo.jugadores = equipo.jugadores.filter(id => id !== jugador.id);
         saveData(data);
 
+        const agentesLibresRolId = data.config?.agentesLibres || client.config?.roles?.agentesLibres;
         const member = await interaction.guild.members.fetch(jugador.id).catch(() => null);
         if (member) {
             await member.roles.remove(rol.id).catch(() => {});
             const enOtroEquipo = Object.values(data.equipos).some(eq => eq.jugadores && eq.jugadores.includes(jugador.id));
-            if (!enOtroEquipo) {
-                await member.roles.add(client.config.roles.agentesLibres).catch(() => {});
+            if (!enOtroEquipo && agentesLibresRolId) {
+                await member.roles.add(agentesLibresRolId).catch(() => {});
             }
         }
 
-        // Notificar al canal de avisos
         const canalAvisos = client.config.canalAvisos
             ? interaction.guild.channels.cache.get(client.config.canalAvisos)
             : null;
 
         if (canalAvisos) {
-            const { EmbedBuilder } = require('discord.js');
             const iconoEquipo = equipo.imagen || null;
             const embed = new EmbedBuilder()
                 .setTitle('📤 Baja de Jugador')
@@ -67,7 +68,6 @@ module.exports = {
                 )
                 .setColor(0xFF6B00)
                 .setTimestamp();
-
             if (iconoEquipo) embed.setThumbnail(iconoEquipo);
             await canalAvisos.send({ embeds: [embed] });
         }

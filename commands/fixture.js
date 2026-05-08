@@ -47,7 +47,7 @@ module.exports = {
 
             const rol1 = interaction.options.getRole('equipo1');
             const rol2 = interaction.options.getRole('equipo2');
-            const fecha = interaction.options.getString('fecha');
+            const fechaStr = interaction.options.getString('fecha');
             const hora = interaction.options.getString('hora');
             const division = interaction.options.getInteger('division');
 
@@ -55,27 +55,15 @@ module.exports = {
                 return interaction.reply({ content: '❌ Los dos equipos deben ser diferentes.', ephemeral: true });
             }
 
-            // Convertir fecha y hora a timestamp de Discord
-            const [dia, mes, anio] = fecha.split('/');
+            const [dia, mes, anio] = fechaStr.split('/');
             const [horas, minutos] = hora.split(':');
             const fechaDate = new Date(anio, mes - 1, dia, horas, minutos);
             const timestamp = Math.floor(fechaDate.getTime() / 1000);
 
             const id = data.fixture.length > 0 ? Math.max(...data.fixture.map(p => p.id)) + 1 : 1;
 
-            data.fixture.push({
-                id,
-                equipo1Id: rol1.id,
-                equipo2Id: rol2.id,
-                timestamp,
-                division
-            });
+            data.fixture.push({ id, equipo1Id: rol1.id, equipo2Id: rol2.id, timestamp, division, avisado: false });
             saveData(data);
-
-            // Anunciar en canal de resultados
-            const canalResultados = client.config.canalResultados
-                ? interaction.guild.channels.cache.get(client.config.canalResultados)
-                : null;
 
             const embed = new EmbedBuilder()
                 .setTitle(`🗓️ Partido Programado — División ${division}`)
@@ -87,20 +75,21 @@ module.exports = {
                 .setColor(division === 1 ? 0xFFD700 : 0xC0C0C0)
                 .setTimestamp();
 
+            const canalResultados = client.config.canalResultados
+                ? interaction.guild.channels.cache.get(client.config.canalResultados)
+                : null;
             if (canalResultados) await canalResultados.send({ embeds: [embed] });
             await interaction.reply({ embeds: [embed] });
 
         } else if (sub === 'ver') {
             const divFiltro = interaction.options.getInteger('division');
             let partidos = [...data.fixture];
-
             if (divFiltro) partidos = partidos.filter(p => p.division === divFiltro);
 
             if (partidos.length === 0) {
                 return interaction.reply({ content: '📭 No hay partidos programados.', ephemeral: true });
             }
 
-            // Ordenar por fecha
             partidos.sort((a, b) => a.timestamp - b.timestamp);
 
             const desc = partidos.map(p =>
@@ -122,11 +111,9 @@ module.exports = {
 
             const id = interaction.options.getInteger('id');
             const index = data.fixture.findIndex(p => p.id === id);
-
             if (index === -1) {
                 return interaction.reply({ content: `❌ No existe un partido con ID **#${id}**.`, ephemeral: true });
             }
-
             data.fixture.splice(index, 1);
             saveData(data);
             await interaction.reply({ content: `✅ Partido **#${id}** eliminado del fixture.` });

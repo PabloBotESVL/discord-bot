@@ -9,8 +9,8 @@ module.exports = {
             sub.setName('dar')
                 .setDescription('Designa el equipo MVP de una fecha [Staff]')
                 .addRoleOption(opt => opt.setName('equipo').setDescription('Equipo MVP').setRequired(true))
-                .addStringOption(opt => opt.setName('fecha').setDescription('Número o nombre de la fecha (ej: Fecha 3)').setRequired(true))
-                .addStringOption(opt => opt.setName('motivo').setDescription('Motivo o descripción').setRequired(true))
+                .addStringOption(opt => opt.setName('fecha').setDescription('Número de fecha (ej: 3)').setRequired(true))
+                .addStringOption(opt => opt.setName('motivo').setDescription('Motivo').setRequired(true))
                 .addIntegerOption(opt =>
                     opt.setName('division')
                         .setDescription('División')
@@ -64,8 +64,8 @@ module.exports = {
             saveData(data);
 
             const embed = new EmbedBuilder()
-                .setTitle(`🏆 Equipo MVP — ${fecha}`)
-                .setDescription(`¡El equipo MVP de la **${fecha}** es <@&${rol.id}>!`)
+                .setTitle(`🏆 Equipo MVP — Fecha ${fecha}`)
+                .setDescription(`¡El equipo MVP de la **Fecha ${fecha}** es <@&${rol.id}>!`)
                 .addFields(
                     { name: 'Equipo', value: `<@&${rol.id}>`, inline: true },
                     { name: 'División', value: `División ${division}`, inline: true },
@@ -75,14 +75,12 @@ module.exports = {
                 .setTimestamp();
 
             if (iconoEquipo) embed.setThumbnail(iconoEquipo);
-
             if (canalAnuncios) await canalAnuncios.send({ embeds: [embed] });
             await interaction.reply({ embeds: [embed] });
 
         } else if (sub === 'historial') {
             const divFiltro = interaction.options.getInteger('division');
             let lista = [...data.mvpsEquipos];
-
             if (divFiltro) lista = lista.filter(m => m.division === divFiltro);
 
             if (lista.length === 0) {
@@ -90,7 +88,7 @@ module.exports = {
             }
 
             const desc = lista.slice(-10).reverse().map((m, i) =>
-                `**${i + 1}.** <@&${m.equipoId}> — ${m.fecha} (Div. ${m.division})\n📝 ${m.motivo}`
+                `**${i + 1}.** <@&${m.equipoId}> — Fecha ${m.fecha} (Div. ${m.division})\n📝 ${m.motivo}`
             ).join('\n\n');
 
             const embed = new EmbedBuilder()

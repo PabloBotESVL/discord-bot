@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const { loadData, saveData, esStaff, getDivisionDeEquipo } = require('../helpers');
+const { loadData, saveData, esStaff } = require('../helpers');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,11 +12,11 @@ module.exports = {
             opt.setName('equipo2').setDescription('Segundo equipo').setRequired(true)
         )
         .addIntegerOption(opt =>
-            opt.setName('sets1').setDescription('Sets ganados por equipo 1 (0, 1 o 2)').setRequired(true)
+            opt.setName('sets1').setDescription('Sets ganados por equipo 1').setRequired(true)
                 .addChoices({ name: '0', value: 0 }, { name: '1', value: 1 }, { name: '2', value: 2 })
         )
         .addIntegerOption(opt =>
-            opt.setName('sets2').setDescription('Sets ganados por equipo 2 (0, 1 o 2)').setRequired(true)
+            opt.setName('sets2').setDescription('Sets ganados por equipo 2').setRequired(true)
                 .addChoices({ name: '0', value: 0 }, { name: '1', value: 1 }, { name: '2', value: 2 })
         ),
 
@@ -30,18 +30,16 @@ module.exports = {
         const sets1 = interaction.options.getInteger('sets1');
         const sets2 = interaction.options.getInteger('sets2');
 
-        // Validar resultado válido (2-0, 2-1, 0-2, 1-2)
         const validos = [[2,0],[0,2],[2,1],[1,2]];
         const esValido = validos.some(([a,b]) => a === sets1 && b === sets2);
-
         if (!esValido) {
-            return interaction.reply({ content: '❌ Resultado inválido. Los sets válidos son: 2-0, 0-2, 2-1, 1-2.', ephemeral: true });
+            return interaction.reply({ content: '❌ Resultado inválido. Sets válidos: 2-0, 0-2, 2-1, 1-2.', ephemeral: true });
         }
 
         const data = loadData();
 
         if (!data.equipos[rol1.id] || !data.equipos[rol2.id]) {
-            return interaction.reply({ content: '❌ Uno o ambos equipos no están registrados en ninguna división.', ephemeral: true });
+            return interaction.reply({ content: '❌ Uno o ambos equipos no están registrados.', ephemeral: true });
         }
 
         const ganador = sets1 > sets2 ? rol1 : rol2;
@@ -51,17 +49,33 @@ module.exports = {
         data.equipos[ganador.id].victorias = (data.equipos[ganador.id].victorias || 0) + 1;
         data.equipos[perdedor.id].derrotas = (data.equipos[perdedor.id].derrotas || 0) + 1;
 
+        if (!data.historial) data.historial = [];
+        data.historial.push({
+            equipo1Id: rol1.id,
+            equipo2Id: rol2.id,
+            sets1,
+            sets2,
+            ganadorId: ganador.id,
+            perdedorId: perdedor.id,
+            timestamp: Math.floor(Date.now() / 1000)
+        });
+
         saveData(data);
 
         const embed = new EmbedBuilder()
             .setTitle('🏐 Resultado Registrado')
             .setDescription(
-                `**${rol1.name}** ${sets1} — ${sets2} **${rol2.name}**\n\n` +
-                `🏆 Ganador: ${ganador.name} (+3 pts)\n` +
-                `📉 Perdedor: ${perdedor.name} (+0 pts)`
+                `<@&${rol1.id}> **${sets1}** — **${sets2}** <@&${rol2.id}>\n\n` +
+                `🏆 Ganador: <@&${ganador.id}> (+3 pts)\n` +
+                `📉 Perdedor: <@&${perdedor.id}> (+0 pts)`
             )
             .setColor(0x00C851)
             .setTimestamp();
+
+        const canalResultados = client.config.canalResultados
+            ? interaction.guild.channels.cache.get(client.config.canalResultados)
+            : null;
+        if (canalResultados) await canalResultados.send({ embeds: [embed] });
 
         await interaction.reply({ embeds: [embed] });
     }

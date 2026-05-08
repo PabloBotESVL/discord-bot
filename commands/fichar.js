@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { loadData, esStaff } = require('../helpers');
 
-const MAX_JUGADORES = 12;
+const MAX_JUGADORES = 20;
 
 module.exports = {
     data: new SlashCommandBuilder()

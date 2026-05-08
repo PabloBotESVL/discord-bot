@@ -30,13 +30,51 @@ for (const file of commandFiles) {
     }
 }
 
-// Eventos
 client.once('ready', () => {
     console.log(`✅ Bot conectado como ${client.user.tag}`);
+
+    // Verificar partidos cada minuto
+    setInterval(async () => {
+        try {
+            const data = loadData();
+            if (!data.fixture || data.fixture.length === 0) return;
+
+            const ahora = Math.floor(Date.now() / 1000);
+            let huboAviso = false;
+
+            for (const partido of data.fixture) {
+                if (!partido.avisado && partido.timestamp <= ahora) {
+                    partido.avisado = true;
+                    huboAviso = true;
+
+                    const guild = client.guilds.cache.first();
+                    if (!guild) continue;
+
+                    const canalPartidos = guild.channels.cache.get('1502123971804532846');
+                    if (!canalPartidos) continue;
+
+                    const embed = new EmbedBuilder()
+                        .setTitle('🏐 ¡Es hora del partido!')
+                        .setDescription(`<@&${partido.equipo1Id}> vs <@&${partido.equipo2Id}>`)
+                        .addFields(
+                            { name: 'División', value: `División ${partido.division}`, inline: true },
+                            { name: 'Hora', value: `<t:${partido.timestamp}:T>`, inline: true }
+                        )
+                        .setColor(partido.division === 1 ? 0xFFD700 : 0xC0C0C0)
+                        .setTimestamp();
+
+                    await canalPartidos.send({ content: `<@&${partido.equipo1Id}> <@&${partido.equipo2Id}>`, embeds: [embed] });
+                }
+            }
+
+            if (huboAviso) saveData(data);
+        } catch (err) {
+            console.error('Error en verificación de partidos:', err);
+        }
+    }, 60000);
 });
 
 client.on('interactionCreate', async interaction => {
-    // Manejo de botones
     if (interaction.isButton()) {
         const parts = interaction.customId.split('_');
         const accion = parts[0];
@@ -134,10 +172,11 @@ client.on('interactionCreate', async interaction => {
 
                 await interaction.update({ embeds: [embed], components: [] });
 
-                const canalResultados = config.canalResultados
-                    ? interaction.guild.channels.cache.get(config.canalResultados)
+                // Anunciar en canal de anuncios
+                const canalAnuncios = config.canalAnuncios
+                    ? interaction.guild.channels.cache.get(config.canalAnuncios)
                     : null;
-                if (canalResultados) await canalResultados.send({ embeds: [embed] });
+                if (canalAnuncios) await canalAnuncios.send({ embeds: [embed] });
             }
         }
 
@@ -174,8 +213,8 @@ client.on('interactionCreate', async interaction => {
                 if (!equipo) {
                     return interaction.update({ content: '❌ El equipo ya no existe.', embeds: [], components: [] });
                 }
-                if (equipo.jugadores?.length >= 12) {
-                    return interaction.update({ content: `❌ <@&${equipoRolId}> ya tiene 12 jugadores.`, embeds: [], components: [] });
+                if ((equipo.jugadores?.length || 0) >= 20) {
+                    return interaction.update({ content: `❌ <@&${equipoRolId}> ya tiene 20 jugadores.`, embeds: [], components: [] });
                 }
 
                 if (!equipo.jugadores) equipo.jugadores = [];

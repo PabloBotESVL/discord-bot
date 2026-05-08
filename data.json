@@ -24,9 +24,10 @@
       "jugadores": [
         "752963330880045067",
         "680126262961897550",
-        "1185027867663417409"
+        "1185027867663417409",
+        "1190413517866672151"
       ],
-      "dt": "1185027867663417409",
+      "dt": null,
       "subdt": null,
       "imagen": "https://cdn.discordapp.com/emojis/1478556470000877640.png?size=128"
     },
@@ -34,9 +35,11 @@
       "puntos": 0,
       "victorias": 0,
       "derrotas": 0,
-      "jugadores": [],
-      "dt": "1457427790684229900",
-      "subdt": "732437807624355841",
+      "jugadores": [
+        "1470569044766884008"
+      ],
+      "dt": null,
+      "subdt": null,
       "imagen": "https://cdn.discordapp.com/emojis/1478522844442001428.png?size=128"
     },
     "1480278039538434221": {
@@ -140,15 +143,33 @@
     }
   },
   "advertencias": {
-    "1010923970385690665": []
+    "1010923970385690665": [],
+    "1378774053095211008": []
   },
   "bans": [],
   "fixture": [],
   "historial": [],
-  "temporada": "Amistosos",
+  "temporada": "temporada 1",
   "warnsEquipos": {
     "1460788899767910450": []
   },
-  "mvpsEquipos": [],
-  "mvps": []
+  "mvpsEquipos": [
+    {
+      "equipoId": "1457558508730978406",
+      "fecha": "1",
+      "division": 1,
+      "motivo": "mejor equipo",
+      "timestamp": 1778205615
+    }
+  ],
+  "mvps": [
+    {
+      "jugadorId": "1190413517866672151",
+      "equipoId": "1457558508730978406",
+      "fecha": "1",
+      "division": 1,
+      "motivo": "aura",
+      "timestamp": 1778205570
+    }
+  ]
 }

@@ -9,8 +9,8 @@ module.exports = {
             sub.setName('dar')
                 .setDescription('Designa el MVP de una fecha [Staff]')
                 .addUserOption(opt => opt.setName('jugador').setDescription('Jugador MVP').setRequired(true))
-                .addStringOption(opt => opt.setName('fecha').setDescription('Número o nombre de la fecha (ej: Fecha 3)').setRequired(true))
-                .addStringOption(opt => opt.setName('motivo').setDescription('Motivo o descripción').setRequired(true))
+                .addStringOption(opt => opt.setName('fecha').setDescription('Número de fecha (ej: 3)').setRequired(true))
+                .addStringOption(opt => opt.setName('motivo').setDescription('Motivo').setRequired(true))
                 .addIntegerOption(opt =>
                     opt.setName('division')
                         .setDescription('División')
@@ -38,10 +38,9 @@ module.exports = {
             const motivo = interaction.options.getString('motivo');
             const division = interaction.options.getInteger('division');
 
-            // Buscar equipo del jugador
             let equipoId = null;
             for (const [rolId, eq] of Object.entries(data.equipos)) {
-                if (eq.jugadores?.includes(jugador.id) || eq.dt === jugador.id || eq.subdt === jugador.id) {
+                if (eq.jugadores?.includes(jugador.id) || eq.dt === jugador.id || eq.subdt === jugador.id || eq.subdt2 === jugador.id) {
                     equipoId = rolId;
                     break;
                 }
@@ -60,8 +59,8 @@ module.exports = {
             saveData(data);
 
             const embed = new EmbedBuilder()
-                .setTitle(`⭐ MVP — ${fecha}`)
-                .setDescription(`¡El MVP de la **${fecha}** es <@${jugador.id}>!`)
+                .setTitle(`⭐ MVP — Fecha ${fecha}`)
+                .setDescription(`¡El MVP de la **Fecha ${fecha}** es <@${jugador.id}>!`)
                 .addFields(
                     { name: 'Jugador', value: `<@${jugador.id}>`, inline: true },
                     { name: 'Equipo', value: equipoId ? `<@&${equipoId}>` : 'Sin equipo', inline: true },
@@ -74,7 +73,6 @@ module.exports = {
 
             if (iconoEquipo) embed.setImage(iconoEquipo);
 
-            // Anunciar en canal de resultados
             const canalResultados = client.config.canalResultados
                 ? interaction.guild.channels.cache.get(client.config.canalResultados)
                 : null;
@@ -88,7 +86,7 @@ module.exports = {
             }
 
             const desc = data.mvps.slice(-10).reverse().map((m, i) =>
-                `**${i + 1}.** <@${m.jugadorId}> — ${m.fecha} (Div. ${m.division})\n📝 ${m.motivo}`
+                `**${i + 1}.** <@${m.jugadorId}> — Fecha ${m.fecha} (Div. ${m.division})\n📝 ${m.motivo}`
             ).join('\n\n');
 
             const embed = new EmbedBuilder()

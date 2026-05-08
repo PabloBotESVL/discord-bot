@@ -17,7 +17,8 @@ module.exports = {
                 .setRequired(true)
                 .addChoices(
                     { name: 'DT', value: 'dt' },
-                    { name: 'Sub-DT', value: 'subdt' }
+                    { name: 'Sub-DT 1', value: 'subdt' },
+                    { name: 'Sub-DT 2', value: 'subdt2' }
                 )
         ),
 
@@ -32,22 +33,21 @@ module.exports = {
         const data = loadData();
 
         if (!data.equipos[rol.id]) {
-            return interaction.reply({ content: `❌ El equipo <@&${rol.id}> no está registrado.`, ephemeral: true });
+            return interaction.reply({ content: `❌ <@&${rol.id}> no está registrado.`, ephemeral: true });
         }
 
         data.equipos[rol.id][cargo] = usuario.id;
         saveData(data);
 
+        const dtRolId = data.config?.dt || client.config?.roles?.dt;
         const member = await interaction.guild.members.fetch(usuario.id).catch(() => null);
         if (member) {
-            // Solo el DT recibe el rol de DT, el Sub-DT solo recibe el rol del equipo
-            if (cargo === 'dt') {
-                await member.roles.add(client.config.roles.dt).catch(() => {});
-            }
+            // Solo el DT recibe el rol de DT, los Sub-DTs solo el rol del equipo
+            if (cargo === 'dt' && dtRolId) await member.roles.add(dtRolId).catch(() => {});
             await member.roles.add(rol.id).catch(() => {});
         }
 
-        const cargoLabel = cargo === 'dt' ? 'DT' : 'Sub-DT';
+        const cargoLabel = cargo === 'dt' ? 'DT' : cargo === 'subdt' ? 'Sub-DT 1' : 'Sub-DT 2';
         await interaction.reply({ content: `✅ <@${usuario.id}> asignado como **${cargoLabel}** de <@&${rol.id}>.` });
     }
 };
